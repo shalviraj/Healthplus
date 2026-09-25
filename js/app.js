@@ -106,7 +106,8 @@ async function renderStrip() {
   const byDate = Object.fromEntries(recs.map((r) => [r.date, r]));
   if (state.cur) byDate[state.date] = state.cur;
   const today = todayISO();
-  const units = { weight: "kg", bp: "BP high", sugar: "fasting" };
+  const units = { weight: "Weight · kg", bp: "Highest BP · mmHg", sugar: "Fasting sugar · mg/dL" };
+  $("#trendUnit").textContent = units[state.metric];
 
   $("#strip").innerHTML = dateRange(from, state.date).map((iso) => {
     const d = byDate[iso];
@@ -116,19 +117,18 @@ async function renderStrip() {
       else if (state.metric === "bp") v = bpHighest(d);
       else v = d.checkpoints?.bbf?.sugar ?? "";
     }
+    // BP is stacked (systolic over diastolic) so seven days fit across a phone.
+    const [top, bottom] = String(v).split("/");
+    const val = !hasValue(v) ? "—" : bottom !== undefined ? `${esc(top)}<i>${esc(bottom)}</i>` : esc(v);
     const dt = fromISO(iso);
-    const cls = ["day", "glass", iso === today && "today", iso === state.date && "sel"].filter(Boolean).join(" ");
-    return `<button class="${cls}" data-date="${iso}">
-      <span class="dw">${dt.toLocaleDateString(undefined, { weekday: "short" })}</span>
-      <span class="dd">${dt.getDate()} ${dt.toLocaleDateString(undefined, { month: "short" })}</span>
-      <span class="dv ${hasValue(v) ? "" : "empty"}">${hasValue(v) ? esc(v) : "—"}</span>
-      <span class="du">${units[state.metric]}</span>
+    const cls = ["day", iso === today && "today", iso === state.date && "sel"].filter(Boolean).join(" ");
+    return `<button class="${cls}" data-date="${iso}" aria-label="${dt.toDateString()}">
+      <span class="dw">${dt.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3)}</span>
+      <span class="dd">${dt.getDate()}</span>
+      <span class="dv ${hasValue(v) ? "" : "empty"}">${val}</span>
     </button>`;
   }).join("");
 
-  const strip = $("#strip");
-  const target = $(".day.today", strip) || $(".day.sel", strip);
-  if (target) strip.scrollLeft = target.offsetLeft - (strip.clientWidth - target.offsetWidth) / 2;
   $$("#metricSeg button").forEach((b) => b.classList.toggle("on", b.dataset.metric === state.metric));
 }
 

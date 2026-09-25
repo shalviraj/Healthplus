@@ -50,15 +50,17 @@
 <main id="main">
   <!-- HOME -->
   <section class="view" id="view-home" data-view="home">
-    <div class="section-head">
-      <h2>Last 7 days</h2>
-      <div class="seg" role="tablist" id="metricSeg">
-        <button data-metric="weight">Weight</button>
-        <button data-metric="bp">BP</button>
-        <button data-metric="sugar">Sugar</button>
+    <div class="card glass trend">
+      <div class="trend-head">
+        <div><h2>Last 7 days</h2><small id="trendUnit"></small></div>
+        <div class="seg" role="tablist" id="metricSeg">
+          <button data-metric="weight">Weight</button>
+          <button data-metric="bp">BP</button>
+          <button data-metric="sugar">Sugar</button>
+        </div>
       </div>
+      <div class="strip" id="strip"></div>
     </div>
-    <div class="strip" id="strip"></div>
 
     <div class="grid2">
       <label class="card glass field">
