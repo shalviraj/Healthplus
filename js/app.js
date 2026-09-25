@@ -419,7 +419,6 @@ function bind() {
     const p = $("#datePicker");
     try { p.showPicker(); } catch { p.focus(); p.click(); }
   };
-  $("#calBtn").onclick = pick;
   $("#dateLabel").onclick = pick;
   $("#datePicker").onchange = (e) => e.target.value && setDate(e.target.value);
 
