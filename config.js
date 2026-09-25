@@ -3,7 +3,7 @@
 // Both values can also be changed in the app under Settings.
 window.HP_CONFIG = {
   // Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application)
-  googleClientId: "",
+  googleClientId: "947565540571-aleqemaac6jhpuo0dldglaj7c2is1s8m.apps.googleusercontent.com",
   // The ID from the Sheet URL: docs.google.com/spreadsheets/d/<THIS PART>/edit
   sheetId: "1n6DhJXWqMXRk_eCVLjn2Qv6TneteD_Jyae6Oz5vbq7M",
   // First day of the "Day" counter (Day 1)
