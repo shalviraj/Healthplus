@@ -1,18 +1,18 @@
 :root {
-  --bg1: #dfe8f5;
-  --bg2: #efe4f1;
-  --blob1: #9cc2f0;
-  --blob2: #f3b8d3;
-  --blob3: #a7e3d5;
-  --glass: rgba(255, 255, 255, 0.58);
-  --glass-strong: rgba(255, 255, 255, 0.78);
-  --glass-edge: rgba(255, 255, 255, 0.85);
-  --shadow: 0 8px 28px rgba(30, 50, 90, 0.12), 0 1px 2px rgba(30, 50, 90, 0.08);
-  --text: #0b1324;
-  --muted: #4a5670;
-  --line: rgba(11, 19, 36, 0.12);
-  --accent: #1f5fd6;
-  --accent-soft: rgba(31, 95, 214, 0.12);
+  --bg1: #f3ede2;
+  --bg2: #ece5f4;
+  --blob1: #cec2f0;
+  --blob2: #f0e3c8;
+  --blob3: #d9d3ea;
+  --glass: rgba(255, 255, 255, 0.55);
+  --glass-strong: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.92);
+  --shadow: 0 10px 30px rgba(58, 48, 88, 0.1), 0 1px 2px rgba(58, 48, 88, 0.08);
+  --text: #221f30;
+  --muted: #6c6479;
+  --line: rgba(34, 31, 48, 0.12);
+  --accent: #6a5cd6;
+  --accent-soft: rgba(106, 92, 214, 0.13);
   --accent-text: #ffffff;
   --danger: #c0262d;
   --danger-soft: rgba(192, 38, 45, 0.12);
@@ -23,21 +23,21 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg1: #0c1424;
-    --bg2: #161226;
-    --blob1: #1f4f99;
-    --blob2: #6a2a57;
-    --blob3: #11695a;
-    --glass: rgba(24, 32, 52, 0.55);
-    --glass-strong: rgba(30, 40, 64, 0.82);
+    --bg1: #14101f;
+    --bg2: #1c1526;
+    --blob1: #4a3e8f;
+    --blob2: #3a3450;
+    --blob3: #251e38;
+    --glass: rgba(30, 25, 42, 0.55);
+    --glass-strong: rgba(36, 30, 50, 0.82);
     --glass-edge: rgba(255, 255, 255, 0.12);
     --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
-    --text: #f3f6fc;
-    --muted: #a7b2c8;
+    --text: #f3f0fa;
+    --muted: #ada4c0;
     --line: rgba(255, 255, 255, 0.14);
-    --accent: #6ea2ff;
-    --accent-soft: rgba(110, 162, 255, 0.18);
-    --accent-text: #08101f;
+    --accent: #a99bf5;
+    --accent-soft: rgba(169, 155, 245, 0.18);
+    --accent-text: #16101f;
     --danger: #ff7b80;
     --danger-soft: rgba(255, 123, 128, 0.16);
     --ok: #4fd39c;
