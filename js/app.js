@@ -51,6 +51,7 @@ async function loadDay(date) {
     const prev = await db.findBefore(date, hasMeds);
     if (prev) day.meds = { ...prev.meds };
   }
+  if (!hasValue(day.intake) && hasValue(state.settings.waterDefault)) day.intake = state.settings.waterDefault;
   return day;
 }
 
@@ -307,6 +308,7 @@ async function loadSettings() {
   state.settings = {
     day1: saved.day1 || cfg.day1 || "",
     name: saved.name || "",
+    waterDefault: saved.waterDefault ?? "5000",
     // Google connection comes only from config.js, not from Settings.
     clientId: cfg.googleClientId || "",
     sheetId: cfg.sheetId || "",
@@ -317,13 +319,24 @@ function openSettings() {
   const s = state.settings;
   $("#setDay1").value = s.day1;
   $("#setName").value = s.name;
+  $("#setWater").value = s.waterDefault;
   $("#settingsDlg").showModal();
 }
 async function saveSettings() {
-  state.settings = { ...state.settings, day1: $("#setDay1").value, name: $("#setName").value.trim() };
-  await db.setKV("settings", { day1: state.settings.day1, name: state.settings.name });
+  state.settings = {
+    ...state.settings,
+    day1: $("#setDay1").value,
+    name: $("#setName").value.trim(),
+    waterDefault: $("#setWater").value.replace(/[^\d]/g, ""),
+  };
+  const { day1, name, waterDefault } = state.settings;
+  await db.setKV("settings", { day1, name, waterDefault });
   toast("Settings saved");
   renderHeader();
+  if (state.cur && !hasValue(state.cur.intake) && hasValue(waterDefault)) {
+    state.cur.intake = waterDefault;
+    if (state.tab === "home") renderHome();
+  }
 }
 async function exportBackup() {
   await flush();
