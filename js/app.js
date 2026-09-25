@@ -167,7 +167,16 @@ function renderSugarState(cp) {
   flag.textContent = low ? `Low sugar (below ${LOW_SUGAR}) — treat per doctor's advice` : "";
   flag.className = "flag" + (low ? " low" : "");
   $('[data-cp="sugar"]').classList.toggle("lowval", low);
-  $("#insNote").textContent = hasValue(cp.sugar) ? suggestInsulin(cp.sugar, state.chart).note : "";
+  $("#insNote").textContent = hasValue(cp.sugar) ? suggestedInsulinText(cp.sugar) : "";
+}
+
+// One line combining the suggested dose and the insulin chart note, shown
+// under the Sugar field (e.g. "Suggested 6 units · Range 200–249").
+function suggestedInsulinText(sugar) {
+  const { units, note } = suggestInsulin(sugar, state.chart);
+  if (units === "") return note;
+  const dose = `Suggested ${units} unit${units === "1" ? "" : "s"}`;
+  return note ? `${dose} · ${note}` : dose;
 }
 
 function render() {
@@ -214,7 +223,6 @@ function onInput(e) {
     cp[field] = el.value;
     if (field === "sugar") {
       cp.insSuggested = suggestInsulin(el.value, state.chart).units;
-      $('[data-cp="insSuggested"]').value = cp.insSuggested;
       renderSugarState(cp);
     }
     if (field === "sys" && el.value.length >= 3 && num(el.value) >= 60) $('[data-cp="dia"]').focus();

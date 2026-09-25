@@ -1,5 +1,5 @@
 // Offline cache for the app shell. Bump VERSION whenever files change.
-const VERSION = "hp-v16";
+const VERSION = "hp-v17";
 const SHELL = [
   "./",
   "index.html",
