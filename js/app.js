@@ -354,6 +354,16 @@ async function restoreBackup(file) {
   }
 }
 
+async function eraseAll() {
+  if (!confirm("Erase ALL daily entries on this phone? Settings and the insulin chart are kept. This cannot be undone.")) return;
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  await db.clearDays();
+  $("#settingsDlg").close("cancel");
+  await setDate(todayISO());
+  toast("All entries erased from this phone");
+}
+
 // ---------- wiring ----------
 function bind() {
   document.addEventListener("input", onInput);
@@ -403,6 +413,7 @@ function bind() {
   $("#restoreBtn").onclick = () => $("#restoreFile").click();
   $("#restoreFile").onchange = (e) => e.target.files[0] && restoreBackup(e.target.files[0]);
   $("#signOutBtn").onclick = () => { signOut(); toast("Signed out of Google"); };
+  $("#eraseBtn").onclick = eraseAll;
 
   // Reset each dialog's result so closing with Esc/backdrop never re-applies the last action.
   $$("dialog").forEach((d) => d.addEventListener("cancel", () => (d.returnValue = "cancel")));

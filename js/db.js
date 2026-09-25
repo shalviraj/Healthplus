@@ -90,3 +90,7 @@ export async function replaceAll(days, kv) {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+export async function clearDays() {
+  return wrap((await store("days", "readwrite")).clear());
+}

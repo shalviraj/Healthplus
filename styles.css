@@ -176,6 +176,7 @@ input.lowval { color: var(--danger); border-color: var(--danger); }
 .btn:active { transform: scale(.98); }
 .btn.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; width: 100%; }
 .btn.ghost { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.btn.danger { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
 .btn[disabled] { opacity: .6; }
 
 /* Tab bar */
