@@ -1,11 +1,12 @@
-// Client-side PDF in the layout of the reference chart: Letter landscape,
-// 8 dates per page, bold shaded Date row, bold shaded first column repeated
-// on every page, full borders, wrapped text, uniform column widths.
+// Client-side PDF in the layout of the reference chart, adapted to A4
+// portrait: 6 dates per page, bold shaded Date row, bold shaded first
+// column repeated on every page, full borders, wrapped text, uniform
+// column widths.
 import { buildTable, fromISO } from "./model.js";
 
-const PER_PAGE = 8;
-const MARGIN = 36;
-const FIRST_COL = 88;
+const PER_PAGE = 6;
+const MARGIN = 26;
+const FIRST_COL = 70;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const nice = (iso) => {
@@ -20,7 +21,7 @@ export function fileName(from, to, name) {
 
 export function makePdf(dates, dayMap, ctx) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
+  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const colW = (pageW - MARGIN * 2 - FIRST_COL) / PER_PAGE;
 
