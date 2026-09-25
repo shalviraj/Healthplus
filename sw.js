@@ -1,5 +1,5 @@
 // Offline cache for the app shell. Bump VERSION whenever files change.
-const VERSION = "hp-v5";
+const VERSION = "hp-v6";
 const SHELL = [
   "./",
   "index.html",
@@ -19,7 +19,7 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -30,13 +30,14 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// Same-origin GETs: network first (so updates show up), cache as fallback offline.
+// Same-origin GETs: network first, revalidating past the browser's HTTP cache so the
+// page and its scripts are always the same version; cache as fallback offline.
 // Google sign-in and Sheets API calls are never cached.
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request.url, { cache: "no-cache", credentials: "same-origin" })
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();

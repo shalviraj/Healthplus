@@ -62,7 +62,13 @@ async function save() {
   clearTimeout(saveTimer);
   saveTimer = null;
   if (!state.cur) return;
-  await db.putDay(state.cur);
+  try {
+    await db.putDay(state.cur);
+  } catch (err) {
+    console.error(err);
+    toast("Could not save on this phone: " + (err.message || err), 6000);
+    return;
+  }
   flashSaved();
   renderStrip();
   renderSnapshot();
@@ -430,10 +436,22 @@ async function init() {
   await loadSettings();
   await setDate(todayISO());
   if (state.settings.clientId && navigator.onLine) loadGis().catch(() => {});
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Register the service worker first, so a broken start still picks up the next update.
+// When a new version takes over, reload once so the page and its scripts always match.
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    flush().finally(() => location.reload());
+  });
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
 }
 
 init().catch((err) => {
   console.error(err);
-  toast("Could not open local storage: " + (err.message || err), 6000);
+  toast("Something went wrong while starting. Close and reopen the app. (" + (err.message || err) + ")", 8000);
 });
