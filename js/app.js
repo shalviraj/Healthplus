@@ -1,7 +1,7 @@
 import * as db from "./db.js";
 import {
   CHECKPOINTS, MEDS, LABS, LOW_SUGAR,
-  todayISO, addDays, fromISO, dayNumber, blankDay, hasMeds, hasValue, labsFilled, cpLogged,
+  todayISO, addDays, fromISO, blankDay, hasMeds, hasValue, labsFilled, cpLogged,
   num, bpHighest, suggestInsulin, normalizeChart, dateRange,
 } from "./model.js";
 import { makePdf, fileName } from "./pdf.js";
@@ -73,11 +73,7 @@ async function flush() {
 
 // ---------- rendering ----------
 function renderHeader() {
-  const today = todayISO();
   $("#dateMain").textContent = fmtLong(state.date);
-  const rel = state.date === today ? "Today" : state.date === addDays(today, -1) ? "Yesterday" : state.date === addDays(today, 1) ? "Tomorrow" : "";
-  const dn = dayNumber(state.date, state.settings.day1);
-  $("#dateSub").textContent = [rel, dn && `Day ${dn}`].filter(Boolean).join(" · ") || " ";
   $("#datePicker").value = state.date;
 }
 

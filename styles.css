@@ -92,10 +92,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .datebar { display: flex; align-items: center; gap: 4px; padding-top: 4px; }
 .icon-btn { background: none; border: 0; padding: 8px; border-radius: 12px; display: grid; place-items: center; }
 .icon-btn:active { background: var(--accent-soft); }
-.date-label { flex: 1; background: none; border: 0; display: flex; flex-direction: column; align-items: center; padding: 2px 4px; min-width: 0; }
-.date-label span { font-weight: 700; font-size: 17px; white-space: nowrap; }
-.date-label small { color: var(--muted); font-size: 12.5px; font-weight: 600; }
-.date-label small { display: inline-flex; align-items: center; gap: 8px; }
+.date-label { flex: 1; background: none; border: 0; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 2px 4px; min-width: 0; }
+#dateMain { font-weight: 700; font-size: 17px; white-space: nowrap; }
 .saved {
   display: inline-flex; align-items: center; gap: 2px;
   font-size: 12.5px; font-weight: 700; color: var(--ok);
