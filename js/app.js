@@ -19,6 +19,7 @@ const state = {
   metric: pref("metric", "weight"),
 };
 let saveTimer = null;
+let lastEditedEl = null; // the input a save should flash a checkmark next to
 
 // ---------- small helpers ----------
 function pref(key, fallback) {
@@ -34,11 +35,19 @@ function toast(msg, ms = 2600) {
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => t.classList.remove("show"), ms);
 }
-function flashSaved() {
-  const s = $("#saved");
-  s.classList.add("show");
-  clearTimeout(flashSaved.timer);
-  flashSaved.timer = setTimeout(() => s.classList.remove("show"), 1200);
+// Shows the saved checkmark inside the field that was just edited, rather
+// than in the header. Silently does nothing if that field isn't visible
+// right now (e.g. a tab switch triggered the save for the previous tab).
+function flashFieldSaved(el) {
+  if (!el || !el.isConnected || el.closest("[hidden]")) return;
+  const chip = $("#fieldCheck");
+  const r = el.getBoundingClientRect();
+  if (!r.width) return;
+  chip.style.left = `${r.right - 15}px`;
+  chip.style.top = `${r.top + r.height / 2}px`;
+  chip.classList.add("show");
+  clearTimeout(flashFieldSaved.timer);
+  flashFieldSaved.timer = setTimeout(() => chip.classList.remove("show"), 1100);
 }
 const fmtLong = (iso) => fromISO(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -70,7 +79,7 @@ async function save() {
     toast("Could not save on this phone: " + (err.message || err), 6000);
     return;
   }
-  flashSaved();
+  flashFieldSaved(lastEditedEl);
   renderStrip();
   renderSnapshot();
 }
@@ -227,6 +236,7 @@ function onInput(e) {
     }
     if (field === "sys" && el.value.length >= 3 && num(el.value) >= 60) $('[data-cp="dia"]').focus();
   } else return;
+  lastEditedEl = el;
   scheduleSave();
 }
 
