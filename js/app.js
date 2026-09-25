@@ -322,11 +322,23 @@ async function loadSettings() {
   };
   state.chart = await db.getKV("insulinChart", cfg.insulinChart || []);
 }
+// ---------- theme ----------
+const THEME_COLOR = { light: "#f3ede2", dark: "#14101f" };
+function applyTheme(theme) {
+  if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  else delete document.documentElement.dataset.theme;
+  const resolved = theme === "light" || theme === "dark" ? theme
+    : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  $$('meta[name="theme-color"]').forEach((m) => (m.content = THEME_COLOR[resolved]));
+  $$("#themeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.theme === theme));
+}
+
 function openSettings() {
   const s = state.settings;
   $("#setDay1").value = s.day1;
   $("#setName").value = s.name;
   $("#setWater").value = s.waterDefault;
+  $$("#themeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.theme === (pref("theme", "system"))));
   $("#settingsDlg").showModal();
 }
 async function saveSettings() {
@@ -427,6 +439,12 @@ function bind() {
   $("#settingsBtn").onclick = openSettings;
   $("#settingsTop").onclick = openSettings;
   $("#settingsDlg").addEventListener("close", (e) => e.target.returnValue === "save" && saveSettings());
+  $("#themeSeg").onclick = (e) => {
+    const b = e.target.closest("button[data-theme]");
+    if (!b) return;
+    setPref("theme", b.dataset.theme);
+    applyTheme(b.dataset.theme);
+  };
   $("#backupBtn").onclick = exportBackup;
   $("#restoreBtn").onclick = () => $("#restoreFile").click();
   $("#restoreFile").onchange = (e) => e.target.files[0] && restoreBackup(e.target.files[0]);
@@ -444,6 +462,7 @@ function bind() {
 async function init() {
   buildLists();
   bind();
+  applyTheme(pref("theme", "system"));
   await loadSettings();
   await setDate(todayISO());
   if (state.settings.clientId && navigator.onLine) loadGis().catch(() => {});

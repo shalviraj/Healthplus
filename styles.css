@@ -21,8 +21,11 @@
   --radius: 16px;
   --tabbar-h: 80px;
 }
+/* Dark palette: applied when the system prefers dark and the person hasn't
+   forced Light in Settings, or whenever Settings forces Dark regardless of
+   the system. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg1: #14101f;
     --bg2: #1c1526;
     --blob1: #4a3e8f;
@@ -43,6 +46,27 @@
     --ok: #4fd39c;
     --field: rgba(10, 16, 30, 0.45);
   }
+}
+:root[data-theme="dark"] {
+  --bg1: #14101f;
+  --bg2: #1c1526;
+  --blob1: #4a3e8f;
+  --blob2: #3a3450;
+  --blob3: #251e38;
+  --glass: rgba(30, 25, 42, 0.55);
+  --glass-strong: rgba(36, 30, 50, 0.82);
+  --glass-edge: rgba(255, 255, 255, 0.12);
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --text: #f3f0fa;
+  --muted: #ada4c0;
+  --line: rgba(255, 255, 255, 0.14);
+  --accent: #a99bf5;
+  --accent-soft: rgba(169, 155, 245, 0.18);
+  --accent-text: #16101f;
+  --danger: #ff7b80;
+  --danger-soft: rgba(255, 123, 128, 0.16);
+  --ok: #4fd39c;
+  --field: rgba(10, 16, 30, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -117,6 +141,8 @@ h2 { font-size: 15px; margin: 0; letter-spacing: .01em; }
 .seg { display: inline-flex; background: var(--field); border: 1px solid var(--line); border-radius: 999px; padding: 2px; flex: none; }
 .seg button { border: 0; background: none; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--muted); }
 .seg button.on { background: var(--accent); color: var(--accent-text); }
+.seg-block { display: flex; width: 100%; }
+.seg-block button { flex: 1; padding: 8px 4px; font-size: 14px; }
 .strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .day {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px;

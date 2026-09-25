@@ -183,6 +183,14 @@
 <dialog id="settingsDlg" class="sheet">
   <form method="dialog" class="sheet-inner">
     <header><h3>Settings</h3><button class="x" value="cancel" aria-label="Close">×</button></header>
+    <div class="field plain">
+      <span class="lbl">Theme</span>
+      <div class="seg seg-block" role="tablist" id="themeSeg">
+        <button type="button" data-theme="system">System</button>
+        <button type="button" data-theme="light">Light</button>
+        <button type="button" data-theme="dark">Dark</button>
+      </div>
+    </div>
     <label class="field plain"><span class="lbl">Day 1 date (for the “Day” row)</span><input type="date" id="setDay1"></label>
     <label class="field plain"><span class="lbl">Name on PDF file (stays on this phone)</span><input type="text" id="setName" autocomplete="off"></label>
     <label class="field plain"><span class="lbl">Default water intake (ml) — filled in on each new day</span><input type="text" inputmode="numeric" id="setWater" autocomplete="off" placeholder="e.g. 5000"></label>
