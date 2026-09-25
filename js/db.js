@@ -41,6 +41,18 @@ export async function putDay(day) {
   return wrap((await store("days", "readwrite")).put(day));
 }
 
+// Adds several day records at once, without touching any other date.
+export async function putDays(days) {
+  const db = await open();
+  const tx = db.transaction("days", "readwrite");
+  const s = tx.objectStore("days");
+  days.forEach((d) => s.put(d));
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function allDays() {
   const days = await wrap((await store("days")).getAll());
   return days.sort((a, b) => a.date.localeCompare(b.date));

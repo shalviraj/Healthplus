@@ -2,7 +2,7 @@
 // Sheets REST API. The whole chart is rewritten from a merge of what is
 // already in the Sheet and what is on the phone, keyed by date, so syncing
 // again never duplicates a day and days missing from the phone are kept.
-import { ROWS, buildTable, parseDDMMYYYY, dateRange } from "./model.js";
+import { ROWS, buildTable, parseDDMMYYYY, dateRange, dayFromSheetRow } from "./model.js";
 
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 const TOKEN_KEY = "hp.gtoken";
@@ -147,7 +147,15 @@ export async function syncToSheet({ clientId, sheetId, days, ctx }) {
   });
 
   await api(token, `${sheetId}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: formatRequests(gid, table.length, table[0].length) }) });
-  return { days: dates.length };
+
+  // Pull down dates the Sheet has that this phone doesn't, so history entered
+  // elsewhere (or seeded directly into the Sheet) shows up when you browse to
+  // that date. Never touches a date the phone already has.
+  const imported = Object.keys(sheetDays)
+    .filter((iso) => !local[iso])
+    .map((iso) => dayFromSheetRow(iso, sheetDays[iso]));
+
+  return { days: dates.length, imported };
 }
 
 function formatRequests(gid, rows, cols) {

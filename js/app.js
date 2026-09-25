@@ -291,7 +291,14 @@ async function doSync() {
       days: await db.allDays(),
       ctx: { day1: state.settings.day1 },
     });
-    toast(`Synced ${res.days} days to Google Sheets`);
+    if (res.imported?.length) {
+      await db.putDays(res.imported);
+      state.cur = await loadDay(state.date);
+      render();
+    }
+    toast(res.imported?.length
+      ? `Synced ${res.days} days · pulled in ${res.imported.length} from the Sheet`
+      : `Synced ${res.days} days to Google Sheets`);
   } catch (err) {
     toast(err.message || String(err), 4500);
   } finally {

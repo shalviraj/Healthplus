@@ -1,7 +1,7 @@
 // Run with: node --test tests/   (uses placeholder data only)
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bpHighest, bpLowest, suggestInsulin, dayNumber, buildTable, blankDay, ROWS } from "../js/model.js";
+import { bpHighest, bpLowest, suggestInsulin, dayNumber, buildTable, blankDay, dayFromSheetRow, ROWS } from "../js/model.js";
 
 const day = (bps) => {
   const d = blankDay("2026-01-10");
@@ -60,4 +60,26 @@ test("export table has all four BP rows plus highest/lowest", () => {
   assert.equal(row("Fasting BS")[1], "181");
   assert.equal(row("Tac")[1], "3mg BD");
   assert.equal(t.length, ROWS.length + 1);
+});
+
+test("a Sheet-only date imports into a day record, with BP falling back to the sheet's summary", () => {
+  const byLabel = {
+    Intake: "5500", Output: "5150", Weight: "65.9",
+    "Fasting BS": "130", PP: "160", "Before Lunch": "200", "Before Dinner": "180",
+    "BP-Highest": "140/90", "BP-Lowest": "118/76",
+    Tac: "3mg BD", "Bactrim DS": "1/2",
+    T0: "9.3", HB: "10.4",
+  };
+  const d = dayFromSheetRow("2026-09-15", byLabel);
+  assert.equal(d.intake, "5500");
+  assert.equal(d.checkpoints.bbf.weight, "65.9");
+  assert.equal(d.checkpoints.bbf.sugar, "130");
+  assert.equal(d.checkpoints.abf.sugar, "160");
+  assert.equal(d.meds.Tac, "3mg BD");
+  assert.equal(d.labs.T0, "9.3");
+  // No per-checkpoint BP in the source, so it stays blank...
+  assert.equal(d.checkpoints.bbf.sys, undefined);
+  // ...and bpHighest/bpLowest fall back to the imported summary.
+  assert.equal(bpHighest(d), "140/90");
+  assert.equal(bpLowest(d), "118/76");
 });

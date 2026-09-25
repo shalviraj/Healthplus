@@ -48,7 +48,10 @@ export function dayNumber(iso, day1) {
 export function blankDay(date) {
   const checkpoints = {};
   CHECKPOINTS.forEach((c) => (checkpoints[c.id] = {}));
-  return { date, intake: "", output: "", meds: {}, labs: {}, checkpoints };
+  // bpHistoric: BP-Highest/Lowest text pulled in from the Sheet for a day that
+  // has no per-checkpoint BP on this phone (see dayFromSheetRow). bpHighest/
+  // bpLowest fall back to it only when no checkpoint has a real reading.
+  return { date, intake: "", output: "", meds: {}, labs: {}, checkpoints, bpHistoric: null };
 }
 
 export const hasValue = (v) => v !== undefined && v !== null && String(v).trim() !== "";
@@ -72,17 +75,21 @@ function bpReadings(day) {
   return CHECKPOINTS.map((c) => day?.checkpoints?.[c.id]).filter((cp) => num(cp?.sys) !== null);
 }
 
-// Highest systolic of the day; a tie keeps the earlier checkpoint.
+// Highest systolic of the day; a tie keeps the earlier checkpoint. Falls back
+// to a Sheet-imported summary (bpHistoric) when no checkpoint has a reading.
 export function bpHighest(day) {
   let best = null;
   for (const cp of bpReadings(day)) if (!best || num(cp.sys) > num(best.sys)) best = cp;
-  return best ? bpText(best) : "";
+  if (best) return bpText(best);
+  return day?.bpHistoric?.highest || "";
 }
 
 // Lowest systolic of the day; a tie keeps the earlier checkpoint. Blank when
-// there is only one reading (it is already shown as the highest).
+// there is only one reading (it is already shown as the highest), or falls
+// back to a Sheet-imported summary when no checkpoint has a reading.
 export function bpLowest(day) {
   const readings = bpReadings(day);
+  if (!readings.length) return day?.bpHistoric?.lowest || "";
   if (readings.length < 2) return "";
   let best = null;
   for (const cp of readings) if (!best || num(cp.sys) < num(best.sys)) best = cp;
@@ -139,4 +146,26 @@ export function buildTable(dates, dayMap, ctx) {
   const header = ["Date", ...dates.map(ddmmyyyy)];
   const body = ROWS.map((r) => [r.label, ...dates.map((iso) => String(r.get(dayMap[iso] || blankDay(iso), ctx) ?? ""))]);
   return [header, ...body];
+}
+
+// The reverse of buildTable's ROWS mapping: turns one Sheet column (label →
+// text, as read for a single date) into a day record for local storage, for
+// a date the phone has no entry for yet (see sheets.js's pull-down on sync).
+// Per-checkpoint BP isn't in the Sheet (only the day's Highest/Lowest), so it
+// stays blank; bpHighest/bpLowest fall back to bpHistoric for such a day.
+export function dayFromSheetRow(date, byLabel) {
+  const day = blankDay(date);
+  const get = (label) => byLabel[label] ?? "";
+  day.intake = get("Intake");
+  day.output = get("Output");
+  day.checkpoints.bbf.weight = get("Weight");
+  day.checkpoints.bbf.sugar = get("Fasting BS");
+  day.checkpoints.abf.sugar = get("PP");
+  day.checkpoints.bl.sugar = get("Before Lunch");
+  day.checkpoints.bd.sugar = get("Before Dinner");
+  MEDS.forEach((m) => (day.meds[m] = get(m)));
+  LABS.forEach((l) => (day.labs[l] = get(l)));
+  const highest = get("BP-Highest"), lowest = get("BP-Lowest");
+  if (highest || lowest) day.bpHistoric = { highest, lowest };
+  return day;
 }
