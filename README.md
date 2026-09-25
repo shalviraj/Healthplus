@@ -20,13 +20,13 @@ Browsers can clear site storage. Use **Settings → Export backup** now and then
 ## Setup
 
 ### 1. GitHub Pages
-Repo **Settings → Pages → Build and deployment**: set Source to *Deploy from a branch* and Branch to `main` / `/ (root)`. The app is then served at `https://<user>.github.io/Healthplus/`.
+Repo **Settings → Pages → Build and deployment**: set Source to *Deploy from a branch* and Branch to `main` / `/ (root)`. The app is then served at `https://shalviraj.github.io/Healthplus/`.
 
 ### 2. Google Sheets sync (one time, about 5 minutes)
 1. Go to https://console.cloud.google.com/ and create a project (e.g. "Healthplus").
 2. **APIs & Services → Library**: enable **Google Sheets API**.
 3. **APIs & Services → OAuth consent screen**: choose *External*, fill in the app name and your email, and add yourself under **Test users**.
-4. **APIs & Services → Credentials → Create credentials → OAuth client ID**: choose *Web application*. Under **Authorized JavaScript origins** add `https://<user>.github.io`.
+4. **APIs & Services → Credentials → Create credentials → OAuth client ID**: choose *Web application*. Under **Authorized JavaScript origins** add `https://shalviraj.github.io`.
 5. Copy the Client ID into `config.js` (`googleClientId`) or into the app under **Settings**.
 6. Put the Sheet ID (from the Sheet URL `/d/<ID>/edit`) in `config.js` (`sheetId`) or paste the full Sheet URL into **Settings**.
 
