@@ -106,3 +106,7 @@ export async function replaceAll(days, kv) {
 export async function clearDays() {
   return wrap((await store("days", "readwrite")).clear());
 }
+
+export async function deleteDay(date) {
+  return wrap((await store("days", "readwrite")).delete(date));
+}

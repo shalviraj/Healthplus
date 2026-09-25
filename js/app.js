@@ -357,6 +357,7 @@ function openSettings() {
   $("#setName").value = s.name;
   $("#setWater").value = s.waterDefault;
   $$("#themeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.theme === (pref("theme", "system"))));
+  $("#clearDayBtn").textContent = `Clear entries for ${fmtLong(state.date)}`;
   $("#settingsDlg").showModal();
 }
 async function saveSettings() {
@@ -398,6 +399,17 @@ async function restoreBackup(file) {
   } catch (err) {
     toast(err.message || "Could not read that file", 4000);
   }
+}
+
+async function clearDay() {
+  const label = fmtLong(state.date);
+  if (!confirm(`Clear all entries for ${label}? This cannot be undone.`)) return;
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  await db.deleteDay(state.date);
+  $("#settingsDlg").close("cancel");
+  await setDate(state.date);
+  toast(`Entries for ${label} cleared`);
 }
 
 async function eraseAll() {
@@ -466,6 +478,7 @@ function bind() {
   $("#restoreBtn").onclick = () => $("#restoreFile").click();
   $("#restoreFile").onchange = (e) => e.target.files[0] && restoreBackup(e.target.files[0]);
   $("#signOutBtn").onclick = () => { signOut(); toast("Signed out of Google"); };
+  $("#clearDayBtn").onclick = clearDay;
   $("#eraseBtn").onclick = eraseAll;
 
   // Reset each dialog's result so closing with Esc/backdrop never re-applies the last action.
