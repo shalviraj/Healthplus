@@ -307,8 +307,9 @@ async function loadSettings() {
   state.settings = {
     day1: saved.day1 || cfg.day1 || "",
     name: saved.name || "",
-    clientId: saved.clientId || cfg.googleClientId || "",
-    sheetId: saved.sheetId || cfg.sheetId || "",
+    // Google connection comes only from config.js, not from Settings.
+    clientId: cfg.googleClientId || "",
+    sheetId: cfg.sheetId || "",
   };
   state.chart = await db.getKV("insulinChart", []);
 }
@@ -316,23 +317,13 @@ function openSettings() {
   const s = state.settings;
   $("#setDay1").value = s.day1;
   $("#setName").value = s.name;
-  $("#setClient").value = s.clientId;
-  $("#setSheet").value = s.sheetId;
   $("#settingsDlg").showModal();
 }
 async function saveSettings() {
-  const sheet = $("#setSheet").value.trim();
-  const m = /\/d\/([\w-]{20,})/.exec(sheet);
-  state.settings = {
-    day1: $("#setDay1").value,
-    name: $("#setName").value.trim(),
-    clientId: $("#setClient").value.trim(),
-    sheetId: m ? m[1] : sheet,
-  };
-  await db.setKV("settings", state.settings);
+  state.settings = { ...state.settings, day1: $("#setDay1").value, name: $("#setName").value.trim() };
+  await db.setKV("settings", { day1: state.settings.day1, name: state.settings.name });
   toast("Settings saved");
   renderHeader();
-  if (state.settings.clientId && navigator.onLine) loadGis().catch(() => {});
 }
 async function exportBackup() {
   await flush();

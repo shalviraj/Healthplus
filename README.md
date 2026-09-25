@@ -27,8 +27,8 @@ Repo **Settings → Pages → Build and deployment**: set Source to *Deploy from
 2. **APIs & Services → Library**: enable **Google Sheets API**.
 3. **APIs & Services → OAuth consent screen**: choose *External*, fill in the app name and your email, and add yourself under **Test users**.
 4. **APIs & Services → Credentials → Create credentials → OAuth client ID**: choose *Web application*. Under **Authorized JavaScript origins** add `https://shalviraj.github.io`.
-5. Copy the Client ID into `config.js` (`googleClientId`) or into the app under **Settings**.
-6. Put the Sheet ID (from the Sheet URL `/d/<ID>/edit`) in `config.js` (`sheetId`) or paste the full Sheet URL into **Settings**.
+5. Copy the Client ID into `config.js` (`googleClientId`).
+6. Put the Sheet ID (from the Sheet URL `/d/<ID>/edit`) in `config.js` (`sheetId`).
 
 The first time you tap **Sync**, Google asks you to sign in and allow access. After that, Sync reuses the sign-in.
 

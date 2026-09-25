@@ -1,6 +1,5 @@
 // Public app configuration. Nothing here is secret: an OAuth Client ID is
 // meant to be public, and the Sheet can only be opened by a signed-in owner.
-// Both values can also be changed in the app under Settings.
 window.HP_CONFIG = {
   // Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application)
   googleClientId: "947565540571-aleqemaac6jhpuo0dldglaj7c2is1s8m.apps.googleusercontent.com",

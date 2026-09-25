@@ -92,8 +92,8 @@ const colLetter = (n) => {
 const cell = (v) => (/^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v);
 
 export async function syncToSheet({ clientId, sheetId, days, ctx }) {
-  if (!clientId) throw new Error("Add the Google OAuth Client ID in Settings first.");
-  if (!sheetId) throw new Error("Add the Google Sheet ID in Settings first.");
+  if (!clientId) throw new Error("Google sign-in is not set up (config.js).");
+  if (!sheetId) throw new Error("No Google Sheet is set (config.js).");
   const token = await getToken(clientId);
 
   const meta = await api(token, `${sheetId}?fields=sheets.properties`);
