@@ -19,20 +19,32 @@
 <div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <header class="topbar glass">
-  <button class="icon-btn" id="prevDay" aria-label="Previous day">
-    <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
-  </button>
-  <button class="date-label" id="dateLabel" aria-label="Pick a date">
-    <span id="dateMain"></span>
-    <small><span id="dateSub"></span><span class="saved" id="saved" aria-live="polite"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Saved</span></small>
-  </button>
-  <input type="date" id="datePicker" class="visually-hidden" tabindex="-1" aria-hidden="true">
-  <button class="icon-btn" id="nextDay" aria-label="Next day">
-    <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-  </button>
-  <button class="icon-btn" id="calBtn" aria-label="Open calendar">
-    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-  </button>
+  <div class="appbar">
+    <img class="app-logo" src="icons/icon.svg" alt="" width="28" height="28">
+    <h1>Healthplus</h1>
+    <button class="icon-btn" id="syncTop" aria-label="Sync to Google Sheet">
+      <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-14.3 4.9M4 12A8 8 0 0 1 18.3 7.1M18 3v4.2h-4.2M6 21v-4.2h4.2"/></svg>
+    </button>
+    <button class="icon-btn" id="settingsTop" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
+  <div class="datebar">
+    <button class="icon-btn" id="prevDay" aria-label="Previous day">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <button class="date-label" id="dateLabel" aria-label="Pick a date">
+      <span id="dateMain"></span>
+      <small><span id="dateSub"></span><span class="saved" id="saved" aria-live="polite"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Saved</span></small>
+    </button>
+    <input type="date" id="datePicker" class="visually-hidden" tabindex="-1" aria-hidden="true">
+    <button class="icon-btn" id="nextDay" aria-label="Next day">
+      <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <button class="icon-btn" id="calBtn" aria-label="Open calendar">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+    </button>
+  </div>
 </header>
 
 <main id="main">
@@ -91,7 +103,7 @@
 
   <!-- CHECKPOINT (shared template for the four tabs) -->
   <section class="view" id="view-cp" data-view="cp" hidden>
-    <h2 class="cp-title" id="cpTitle"></h2>
+    <h2 class="cp-title"><span id="cpTitle"></span><small id="cpSub"></small></h2>
 
     <div class="card glass field big">
       <span class="lbl">Sugar</span>
@@ -130,10 +142,10 @@
 
 <nav class="tabbar glass" id="tabbar">
   <button data-tab="home" class="on"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8.5a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19.5z"/></svg><span>Home</span></button>
-  <button data-tab="bbf"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="4"/><path d="M12 3v2M4.9 6.9l1.4 1.4M3 15h2M19 15h2M17.7 8.3l1.4-1.4M3 20h18"/></svg><span>Before<br>BF</span></button>
-  <button data-tab="abf"><svg viewBox="0 0 24 24"><path d="M4 10h16a8 8 0 0 1-16 0zM8 3v3M12 2v4M16 3v3"/></svg><span>After<br>BF</span></button>
-  <button data-tab="bl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><span>Before<br>Lunch</span></button>
-  <button data-tab="bd"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><span>Before<br>Dinner</span></button>
+  <button data-tab="bbf"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="4"/><path d="M12 3v2M4.9 6.9l1.4 1.4M3 15h2M19 15h2M17.7 8.3l1.4-1.4M3 20h18"/></svg><span>8am</span></button>
+  <button data-tab="abf"><svg viewBox="0 0 24 24"><path d="M4 10h16a8 8 0 0 1-16 0zM8 3v3M12 2v4M16 3v3"/></svg><span>11am</span></button>
+  <button data-tab="bl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><span>2pm</span></button>
+  <button data-tab="bd"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><span>8pm</span></button>
 </nav>
 
 <!-- Insulin chart -->

@@ -150,7 +150,8 @@ function renderSnapshot() {
 function renderCp() {
   const c = CHECKPOINTS.find((x) => x.id === state.tab);
   const cp = state.cur.checkpoints[c.id];
-  $("#cpTitle").textContent = c.name;
+  $("#cpTitle").textContent = c.short;
+  $("#cpSub").textContent = c.name;
   $$("[data-cp]").forEach((i) => (i.value = cp[i.dataset.cp] ?? ""));
   $("#weightCard").hidden = c.id !== "bbf";
   renderSugarState(cp);
@@ -273,9 +274,10 @@ async function downloadPdf() {
 
 // ---------- Sheets ----------
 async function doSync() {
-  const btn = $("#syncBtn");
+  const btn = $("#syncBtn"), top = $("#syncTop");
   if (btn.disabled) return;
-  btn.disabled = true;
+  btn.disabled = top.disabled = true;
+  top.classList.add("spin");
   const label = btn.lastChild.textContent;
   btn.lastChild.textContent = "Syncing…";
   try {
@@ -290,7 +292,8 @@ async function doSync() {
   } catch (err) {
     toast(err.message || String(err), 4500);
   } finally {
-    btn.disabled = false;
+    btn.disabled = top.disabled = false;
+    top.classList.remove("spin");
     btn.lastChild.textContent = label;
   }
 }
@@ -406,8 +409,10 @@ function bind() {
   $("#pdfDlg").addEventListener("close", (e) => e.target.returnValue === "ok" && downloadPdf());
 
   $("#syncBtn").onclick = doSync;
+  $("#syncTop").onclick = doSync;
 
   $("#settingsBtn").onclick = openSettings;
+  $("#settingsTop").onclick = openSettings;
   $("#settingsDlg").addEventListener("close", (e) => e.target.returnValue === "save" && saveSettings());
   $("#backupBtn").onclick = exportBackup;
   $("#restoreBtn").onclick = () => $("#restoreFile").click();

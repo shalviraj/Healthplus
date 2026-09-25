@@ -2,10 +2,10 @@
 // No DOM or storage access here, so it can be unit-tested in Node.
 
 export const CHECKPOINTS = [
-  { id: "bbf", name: "Before Breakfast", short: "Before BF" },
-  { id: "abf", name: "After Breakfast", short: "After BF" },
-  { id: "bl", name: "Before Lunch", short: "Before Lunch" },
-  { id: "bd", name: "Before Dinner", short: "Before Dinner" },
+  { id: "bbf", name: "Before Breakfast", short: "8am" },
+  { id: "abf", name: "After Breakfast", short: "11am" },
+  { id: "bl", name: "Before Lunch", short: "2pm" },
+  { id: "bd", name: "Before Dinner", short: "8pm" },
 ];
 
 export const MEDS = ["Steroid", "Tac", "VIRFOLI", "Bactrim DS", "Faronam 200", "Udiliv 300"];
