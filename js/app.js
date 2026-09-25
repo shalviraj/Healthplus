@@ -320,7 +320,7 @@ async function loadSettings() {
     clientId: cfg.googleClientId || "",
     sheetId: cfg.sheetId || "",
   };
-  state.chart = await db.getKV("insulinChart", []);
+  state.chart = await db.getKV("insulinChart", cfg.insulinChart || []);
 }
 function openSettings() {
   const s = state.settings;
