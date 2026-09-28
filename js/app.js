@@ -5,7 +5,7 @@ import {
   num, bpHighest, suggestInsulin, normalizeChart, dateRange,
 } from "./model.js";
 import { makePdf, fileName } from "./pdf.js";
-import { syncToSheet, loadGis, signOut } from "./sheets.js";
+import { uploadToSheet, downloadFromSheet, loadGis, signOut } from "./sheets.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -294,16 +294,47 @@ async function downloadPdf() {
 }
 
 // ---------- Sheets ----------
-async function doSync() {
-  const btn = $("#syncBtn"), top = $("#syncTop");
+// Two one-way buttons instead of one two-way Sync, since more than one
+// person (each on their own phone) uses this Sheet: "Upload" only fills
+// Sheet cells that are still blank, "Download" only fills local fields
+// that are still blank, so neither can silently overwrite what the other
+// person already entered.
+async function withSyncUI(btnId, topId, busyLabel, run) {
+  const btn = $(btnId), top = $(topId);
   if (btn.disabled) return;
   btn.disabled = top.disabled = true;
   top.classList.add("spin");
   const label = btn.lastChild.textContent;
-  btn.lastChild.textContent = "Syncing…";
+  btn.lastChild.textContent = busyLabel;
   try {
     await flush();
-    const res = await syncToSheet({
+    await run();
+  } catch (err) {
+    toast(err.message || String(err), 4500);
+  } finally {
+    btn.disabled = top.disabled = false;
+    top.classList.remove("spin");
+    btn.lastChild.textContent = label;
+  }
+}
+
+async function doUpload() {
+  await withSyncUI("#uploadBtn", "#uploadTop", "Uploading…", async () => {
+    const res = await uploadToSheet({
+      clientId: state.settings.clientId,
+      sheetId: state.settings.sheetId,
+      days: await db.allDays(),
+      ctx: { day1: state.settings.day1 },
+    });
+    toast(res.filled
+      ? `Uploaded ${res.days} days · filled ${res.filled} blank cells in the Sheet`
+      : `Uploaded to the Sheet · nothing new to fill in`);
+  });
+}
+
+async function doDownload() {
+  await withSyncUI("#downloadBtn", "#downloadTop", "Downloading…", async () => {
+    const res = await downloadFromSheet({
       clientId: state.settings.clientId,
       sheetId: state.settings.sheetId,
       days: await db.allDays(),
@@ -315,15 +346,9 @@ async function doSync() {
       render();
     }
     toast(res.imported?.length
-      ? `Synced ${res.days} days · pulled in ${res.imported.length} from the Sheet`
-      : `Synced ${res.days} days to Google Sheets`);
-  } catch (err) {
-    toast(err.message || String(err), 4500);
-  } finally {
-    btn.disabled = top.disabled = false;
-    top.classList.remove("spin");
-    btn.lastChild.textContent = label;
-  }
+      ? `Downloaded ${res.imported.length} days' worth of new data from the Sheet`
+      : `Downloaded from the Sheet · nothing new for this phone`);
+  });
 }
 
 // ---------- settings / backup ----------
@@ -462,8 +487,10 @@ function bind() {
   $("#pdfDlg .chips").onclick = (e) => e.target.dataset.range && setPdfRange(e.target.dataset.range);
   $("#pdfDlg").addEventListener("close", (e) => e.target.returnValue === "ok" && downloadPdf());
 
-  $("#syncBtn").onclick = doSync;
-  $("#syncTop").onclick = doSync;
+  $("#uploadBtn").onclick = doUpload;
+  $("#uploadTop").onclick = doUpload;
+  $("#downloadBtn").onclick = doDownload;
+  $("#downloadTop").onclick = doDownload;
 
   $("#settingsBtn").onclick = openSettings;
   $("#settingsTop").onclick = openSettings;

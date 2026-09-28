@@ -1,7 +1,7 @@
 // Run with: node --test tests/   (uses placeholder data only)
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bpHighest, bpLowest, suggestInsulin, dayNumber, buildTable, blankDay, dayFromSheetRow, ROWS } from "../js/model.js";
+import { bpHighest, bpLowest, suggestInsulin, dayNumber, buildTable, blankDay, dayFromSheetRow, sheetRowToDay, mergeDay, ROWS } from "../js/model.js";
 
 const day = (bps) => {
   const d = blankDay("2026-01-10");
@@ -122,4 +122,17 @@ test("an 'N/A' cell from the Sheet is treated as blank, not as a real value", ()
   assert.equal(d.checkpoints.bbf.sys, undefined);
   assert.equal(d.meds.Steroid, undefined);
   assert.equal(d.bpHistoric, null);
+});
+
+test("mergeDay with the Sheet as base: Sheet wins, local only fills what the Sheet is missing (Upload to Sheet)", () => {
+  const sheetDay = sheetRowToDay("2026-09-25", { Intake: "5500", "Fasting BS": "130" });
+  const local = blankDay("2026-09-25");
+  local.intake = "9999"; // must NOT overwrite the Sheet's existing 5500
+  local.output = "4850"; // the Sheet has nothing for Output, so this fills it
+  local.checkpoints.bbf.sugar = "999"; // must NOT overwrite the Sheet's existing 130
+
+  const merged = mergeDay(sheetDay, local);
+  assert.equal(merged.intake, "5500", "Sheet value must win over local");
+  assert.equal(merged.output, "4850", "a Sheet-blank field is filled from local");
+  assert.equal(merged.checkpoints.bbf.sugar, "130", "Sheet value must win over local");
 });

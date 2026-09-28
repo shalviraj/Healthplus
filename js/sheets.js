@@ -1,8 +1,13 @@
 // Google Sheets sync using Google Identity Services (token client) and the
-// Sheets REST API. The whole chart is rewritten from a merge of what is
-// already in the Sheet and what is on the phone, keyed by date, so syncing
-// again never duplicates a day and days missing from the phone are kept.
-import { buildTable, parseDDMMYYYY, dateRange, dayFromSheetRow } from "./model.js";
+// Sheets REST API. Two one-way directions instead of a single two-way sync,
+// because more than one person (each with their own phone) uses this Sheet:
+// a blind two-way merge would let whoever syncs last silently overwrite a
+// field the other person already filled in, on either side. So each button
+// only ever fills blanks — it never overwrites a value that is already
+// there, on the phone or in the Sheet — and the loser of a real conflict
+// (both people entered a *different* value for the same field) is simply
+// not moved; that field has to be reconciled by hand.
+import { buildTable, parseDDMMYYYY, dateRange, dayFromSheetRow, sheetRowToDay, mergeDay, ROWS } from "./model.js";
 
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 const TOKEN_KEY = "hp.gtoken";
@@ -72,7 +77,7 @@ async function api(token, path, opts = {}) {
   });
   if (res.status === 401) {
     try { localStorage.removeItem(TOKEN_KEY); } catch {}
-    throw new Error("Google sign-in expired. Tap Sync again.");
+    throw new Error("Google sign-in expired. Try again.");
   }
   if (!res.ok) {
     let msg = `Sheets error ${res.status}`;
@@ -91,11 +96,7 @@ const colLetter = (n) => {
 // Sheet cells are plain text; send clean numbers as numbers so the Sheet can chart them.
 const cell = (v) => (/^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v);
 
-export async function syncToSheet({ clientId, sheetId, days, ctx }) {
-  if (!clientId) throw new Error("Google sign-in is not set up (config.js).");
-  if (!sheetId) throw new Error("No Google Sheet is set (config.js).");
-  const token = await getToken(clientId);
-
+async function readSheet(token, sheetId) {
   const meta = await api(token, `${sheetId}?fields=sheets.properties`);
   const props = meta.sheets[0].properties;
   const title = props.title.replace(/'/g, "''");
@@ -113,26 +114,22 @@ export async function syncToSheet({ clientId, sheetId, days, ctx }) {
     labels.forEach((l, i) => i > 0 && (byLabel[l] = col[i] ?? ""));
     sheetDays[iso] = byLabel;
   }
+  return { title, gid, props, cols, labels, sheetDays };
+}
 
-  // Phone data wins for any date it has.
+function indexByDate(days) {
   const local = {};
   days.forEach((d) => (local[d.date] = d));
+  return local;
+}
+
+function fullDateRange(local, sheetDays) {
   const allDates = [...new Set([...Object.keys(sheetDays), ...Object.keys(local)])].sort();
   if (!allDates.length) throw new Error("Nothing to sync yet.");
-  const dates = dateRange(allDates[0], allDates[allDates.length - 1]);
+  return dateRange(allDates[0], allDates[allDates.length - 1]);
+}
 
-  // Field-level merge for every date: a real value already on the phone
-  // always wins; a field the phone has nothing for is filled in from the
-  // Sheet. This is what lets a date that already has SOME local data (e.g.
-  // only Intake was ever entered) still pick up the rest from the Sheet,
-  // instead of the old all-or-nothing "phone has this date, ignore the
-  // Sheet entirely" behaviour.
-  const merged = {};
-  dates.forEach((iso) => {
-    merged[iso] = sheetDays[iso] ? dayFromSheetRow(iso, sheetDays[iso], local[iso]) : local[iso];
-  });
-  const table = buildTable(dates, merged, ctx);
-
+async function writeTable(token, sheetId, { title, gid, props, cols, labels }, table) {
   // Pad with blanks so any old, wider/taller content is overwritten.
   const width = Math.max(table[0].length, cols.length);
   const height = Math.max(table.length, labels.length);
@@ -152,12 +149,56 @@ export async function syncToSheet({ clientId, sheetId, days, ctx }) {
   });
 
   await api(token, `${sheetId}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: formatRequests(gid, table.length, table[0].length) }) });
+}
 
-  // Pull the merged result back down for every date the Sheet had something
-  // for — a brand-new date the phone had nothing for, or a field filled in
-  // on a date that already existed locally. Saving it is always safe: the
-  // merge above never overwrote a real local value, only blanks.
-  const imported = Object.keys(sheetDays).map((iso) => merged[iso]);
+// Local → Sheet, one-way. The Sheet's own values always win; a local value
+// only gets written into a cell the Sheet has nothing for. Returns how many
+// previously-blank Sheet cells got filled in.
+export async function uploadToSheet({ clientId, sheetId, days, ctx }) {
+  if (!clientId) throw new Error("Google sign-in is not set up (config.js).");
+  if (!sheetId) throw new Error("No Google Sheet is set (config.js).");
+  const token = await getToken(clientId);
+  const sheet = await readSheet(token, sheetId);
+  const local = indexByDate(days);
+  const dates = fullDateRange(local, sheet.sheetDays);
+
+  let filled = 0;
+  const merged = {};
+  dates.forEach((iso) => {
+    const sheetDay = sheet.sheetDays[iso] ? sheetRowToDay(iso, sheet.sheetDays[iso]) : { date: iso };
+    const localDay = local[iso] || { date: iso };
+    merged[iso] = mergeDay(sheetDay, localDay);
+    ROWS.forEach((r) => {
+      if (!String(r.get(sheetDay, ctx) ?? "") && String(r.get(merged[iso], ctx) ?? "")) filled++;
+    });
+  });
+
+  const table = buildTable(dates, merged, ctx);
+  await writeTable(token, sheetId, sheet, table);
+  return { days: dates.length, filled };
+}
+
+// Sheet → local, one-way. The phone's own values always win; a Sheet value
+// only fills a field the phone has nothing for. Nothing is written back to
+// the Sheet. Returns the day records to save locally.
+export async function downloadFromSheet({ clientId, sheetId, days, ctx }) {
+  if (!clientId) throw new Error("Google sign-in is not set up (config.js).");
+  if (!sheetId) throw new Error("No Google Sheet is set (config.js).");
+  const token = await getToken(clientId);
+  const sheet = await readSheet(token, sheetId);
+  const local = indexByDate(days);
+  const dates = fullDateRange(local, sheet.sheetDays);
+
+  const imported = [];
+  dates.forEach((iso) => {
+    if (!sheet.sheetDays[iso]) return;
+    const localDay = local[iso] || { date: iso };
+    const merged = dayFromSheetRow(iso, sheet.sheetDays[iso], localDay);
+    // Only worth saving if it's a brand-new date locally, or the Sheet
+    // actually filled in something the phone was missing.
+    const changed = !local[iso] || ROWS.some((r) => !String(r.get(localDay, ctx) ?? "") && String(r.get(merged, ctx) ?? ""));
+    if (changed) imported.push(merged);
+  });
 
   return { days: dates.length, imported };
 }
