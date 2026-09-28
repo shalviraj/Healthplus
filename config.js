@@ -4,7 +4,7 @@ window.HP_CONFIG = {
   // Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application)
   googleClientId: "947565540571-aleqemaac6jhpuo0dldglaj7c2is1s8m.apps.googleusercontent.com",
   // The ID from the Sheet URL: docs.google.com/spreadsheets/d/<THIS PART>/edit
-  sheetId: "1-rLHwFd_C87rpbSNI5ucmKoJ_3LWF8fC7CaSgHVyIGc",
+  sheetId: "1YUV72GuuvjXg69uBLEfGi76OrLmRYuJYcHO48LKIf3A",
   // First day of the "Day" counter (Day 1)
   day1: "2026-08-11",
   // Starting insulin sliding scale (from the prescription: Inj. Fiasp, thrice
