@@ -2,8 +2,9 @@
 
 A phone-first daily health tracker. You add it to your home screen, it works offline, and it shares data with a Google Sheet via two one-way buttons — **Upload to Sheet** and **Download from Sheet**.
 
-- **Home:** date navigation, a 7-day strip (Weight / BP / Sugar), water intake, urine output, medicines (carried over from the previous day), labs, today's snapshot, the insulin chart, Upload/Download to the Sheet, PDF and Settings.
-- **Before BF / After BF / Before Lunch / Before Dinner:** sugar, BP, suggested insulin (from the insulin chart, editable), insulin given. Weight is on Before BF only. Every change saves automatically.
+- **Home:** everything entered daily. Date navigation, a 7-day strip (Weight / BP / Sugar), Weight, water intake, urine output, and Sugar / Blood pressure — each showing all four times of day (8am / 11am / 2pm / 8pm) at once, with suggested insulin under each Sugar reading. Every change saves automatically.
+- **Occasional:** things that aren't entered every day — the insulin chart, Medicines (carried over from the previous day) and Labs.
+- **Settings:** theme, Day 1 date, PDF name, default water intake, Upload/Download to the Sheet, PDF export, backup/restore, sign out, and clearing/erasing entries.
 - **PDF:** choose a date range. The layout is Letter landscape with 8 days per page, a bold shaded Date row and the first column repeated on every page.
 - **Google Sheet:** one column per date, matched by date, so uploading again never duplicates a day.
 - **Two people, one Sheet:** more than one phone can use the same Sheet (e.g. the patient and a caregiver). Rather than one two-way Sync — where whoever syncs last could silently overwrite what the other person just entered — there are two one-way buttons: **Upload to Sheet** only fills Sheet cells that are still blank (it never overwrites a value already in the Sheet), and **Download from Sheet** only fills local fields that are still blank (it never overwrites what's already on this phone). If the same field was genuinely entered differently on both sides, neither button moves it — that has to be fixed by hand, in whichever place is right.

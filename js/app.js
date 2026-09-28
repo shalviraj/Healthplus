@@ -1,7 +1,7 @@
 import * as db from "./db.js";
 import {
   CHECKPOINTS, MEDS, LABS, LOW_SUGAR,
-  todayISO, addDays, fromISO, blankDay, hasMeds, hasValue, labsFilled, cpLogged,
+  todayISO, addDays, fromISO, blankDay, hasMeds, hasValue, labsFilled,
   num, bpHighest, suggestInsulin, normalizeChart, dateRange,
 } from "./model.js";
 import { makePdf, fileName } from "./pdf.js";
@@ -18,7 +18,8 @@ const state = {
   chart: [],
   metric: pref("metric", "weight"),
 };
-let saveTimer = null;
+let daySaveTimer = null;
+let settingsSaveTimer = null;
 let lastEditedEl = null; // the input a save should flash a checkmark next to
 
 // ---------- small helpers ----------
@@ -64,13 +65,13 @@ async function loadDay(date) {
   return day;
 }
 
-function scheduleSave() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(save, 350);
+function scheduleDaySave() {
+  clearTimeout(daySaveTimer);
+  daySaveTimer = setTimeout(saveDay, 350);
 }
-async function save() {
-  clearTimeout(saveTimer);
-  saveTimer = null;
+async function saveDay() {
+  clearTimeout(daySaveTimer);
+  daySaveTimer = null;
   if (!state.cur) return;
   try {
     await db.putDay(state.cur);
@@ -81,10 +82,38 @@ async function save() {
   }
   flashFieldSaved(lastEditedEl);
   renderStrip();
-  renderSnapshot();
 }
-async function flush() {
-  if (saveTimer) await save();
+async function flushDay() {
+  if (daySaveTimer) await saveDay();
+}
+
+function scheduleSettingsSave() {
+  clearTimeout(settingsSaveTimer);
+  settingsSaveTimer = setTimeout(saveSettingsNow, 350);
+}
+async function saveSettingsNow() {
+  clearTimeout(settingsSaveTimer);
+  settingsSaveTimer = null;
+  const { day1, name, waterDefault } = state.settings;
+  try {
+    await db.setKV("settings", { day1, name, waterDefault });
+  } catch (err) {
+    console.error(err);
+    toast("Could not save on this phone: " + (err.message || err), 6000);
+    return;
+  }
+  flashFieldSaved(lastEditedEl);
+  renderHeader();
+  if (state.cur && !hasValue(state.cur.intake) && hasValue(waterDefault)) {
+    state.cur.intake = waterDefault;
+    if (state.tab === "home") renderHome();
+  }
+}
+async function flushSettings() {
+  if (settingsSaveTimer) await saveSettingsNow();
+}
+async function flushAll() {
+  await Promise.all([flushDay(), flushSettings()]);
 }
 
 // ---------- rendering ----------
@@ -96,11 +125,19 @@ function renderHeader() {
 function renderHome() {
   const d = state.cur;
   $$("[data-home]").forEach((i) => (i.value = d[i.dataset.home] ?? ""));
+  CHECKPOINTS.forEach((c) => {
+    const cp = d.checkpoints[c.id];
+    $$(`[data-cpid="${c.id}"]`).forEach((i) => (i.value = cp[i.dataset.cpfield] ?? ""));
+    renderSugarNote(c.id, cp);
+  });
+  renderStrip();
+}
+
+function renderOccasional() {
+  const d = state.cur;
   $$("[data-med]").forEach((i) => (i.value = d.meds[i.dataset.med] ?? ""));
   $$("[data-lab]").forEach((i) => (i.value = d.labs[i.dataset.lab] ?? ""));
   renderBadges();
-  renderStrip();
-  renderSnapshot();
 }
 
 function renderBadges() {
@@ -142,41 +179,19 @@ async function renderStrip() {
   $$("#metricSeg button").forEach((b) => b.classList.toggle("on", b.dataset.metric === state.metric));
 }
 
-function renderSnapshot() {
-  const d = state.cur;
-  const w = d.checkpoints.bbf.weight;
-  let sugar = "", sugarAt = "";
-  for (const c of [...CHECKPOINTS].reverse()) {
-    if (hasValue(d.checkpoints[c.id].sugar)) { sugar = d.checkpoints[c.id].sugar; sugarAt = c.short; break; }
-  }
-  const logged = CHECKPOINTS.filter((c) => cpLogged(d.checkpoints[c.id])).length;
-  const lowCls = num(sugar) !== null && num(sugar) < LOW_SUGAR ? ' style="color:var(--danger)"' : "";
-  $("#snapshot").innerHTML = `<h3>${state.date === todayISO() ? "Today's snapshot" : "Snapshot"}</h3>
-    <div class="snap">
-      <div><b>${hasValue(w) ? esc(w) : "—"}</b><small>kg weight</small></div>
-      <div><b${lowCls}>${hasValue(sugar) ? esc(sugar) : "—"}</b><small>${sugarAt ? `sugar · ${sugarAt}` : "sugar"}</small></div>
-      <div><b>${logged}/4</b><small>checkpoints</small></div>
-    </div>`;
-}
-
-function renderCp() {
-  const c = CHECKPOINTS.find((x) => x.id === state.tab);
-  const cp = state.cur.checkpoints[c.id];
-  $("#cpTitle").textContent = c.short;
-  $("#cpSub").textContent = c.name;
-  $$("[data-cp]").forEach((i) => (i.value = cp[i.dataset.cp] ?? ""));
-  $("#weightCard").hidden = c.id !== "bbf";
-  renderSugarState(cp);
-}
-
-function renderSugarState(cp) {
-  const s = num(cp.sugar);
-  const low = s !== null && s < LOW_SUGAR;
-  const flag = $("#sugarFlag");
-  flag.textContent = low ? `Low sugar (below ${LOW_SUGAR}) — treat per doctor's advice` : "";
-  flag.className = "flag" + (low ? " low" : "");
-  $('[data-cp="sugar"]').classList.toggle("lowval", low);
-  $("#insNote").textContent = hasValue(cp.sugar) ? suggestedInsulinText(cp.sugar) : "";
+// Low-sugar flag or the suggested-insulin note, shown under a checkpoint's
+// Sugar field (e.g. "Suggested 6 units · Range 200–249").
+function renderSugarNote(id, cp) {
+  cp = cp || state.cur.checkpoints[id];
+  const note = $(`[data-sugar-note="${id}"]`);
+  const input = $(`[data-cpid="${id}"][data-cpfield="sugar"]`);
+  if (!note || !input) return;
+  const low = num(cp.sugar) !== null && num(cp.sugar) < LOW_SUGAR;
+  input.classList.toggle("lowval", low);
+  note.classList.toggle("low", low);
+  note.textContent = !hasValue(cp.sugar) ? ""
+    : low ? `Low sugar (below ${LOW_SUGAR}) — treat per doctor's advice`
+    : suggestedInsulinText(cp.sugar);
 }
 
 // One line combining the suggested dose and the insulin chart note, shown
@@ -191,16 +206,19 @@ function suggestedInsulinText(sugar) {
 function render() {
   renderHeader();
   $("#view-home").hidden = state.tab !== "home";
-  $("#view-cp").hidden = state.tab === "home";
+  $("#view-occasional").hidden = state.tab !== "occasional";
+  $("#view-settings").hidden = state.tab !== "settings";
   $$("#tabbar button").forEach((b) => b.classList.toggle("on", b.dataset.tab === state.tab));
   if (state.tab === "home") renderHome();
-  else renderCp();
+  else if (state.tab === "occasional") renderOccasional();
+  else renderSettingsView();
 }
 
 async function setDate(iso) {
-  await flush();
+  await flushDay();
   state.date = iso;
   state.cur = await loadDay(iso);
+  $("#clearDayBtn").textContent = `Clear entries for ${fmtLong(iso)}`;
   render();
 }
 
@@ -210,10 +228,49 @@ const numeric = (v) => v.replace(/[^\d.]/g, "");
 function buildLists() {
   $("#medsList").innerHTML = MEDS.map((m) => `<label><span>${m}</span><input type="text" data-med="${m}" autocomplete="off" placeholder="—"></label>`).join("");
   $("#labsList").innerHTML = LABS.map((l) => `<label><span>${l}</span><input type="text" data-lab="${l}" autocomplete="off" inputmode="decimal" placeholder="—"></label>`).join("");
+
+  // Sugar and BP now show all four checkpoints at once (see the "Sugar/BP
+  // layout" decision), so each row is tagged with which checkpoint it's for
+  // (data-cpid) and which field within it (data-cpfield) instead of relying
+  // on a "current tab" like the old per-time-of-day tabs did.
+  $("#sugarList").innerHTML = CHECKPOINTS.map((c) => `
+    <div class="cprow">
+      <span class="cp-time">${c.short}</span>
+      <div class="grid2">
+        <label class="field">
+          <span class="lbl">Sugar</span>
+          <span class="inrow"><input class="num" type="text" inputmode="numeric" data-cpid="${c.id}" data-cpfield="sugar" placeholder="—"><em>mg/dL</em></span>
+        </label>
+        <label class="field">
+          <span class="lbl">Insulin given</span>
+          <span class="inrow"><input class="num" type="text" inputmode="decimal" data-cpid="${c.id}" data-cpfield="insGiven" placeholder="—"><em>units</em></span>
+        </label>
+      </div>
+      <small class="sub" data-sugar-note="${c.id}"></small>
+    </div>`).join("");
+
+  $("#bpList").innerHTML = CHECKPOINTS.map((c) => `
+    <div class="cprow">
+      <span class="cp-time">${c.short}</span>
+      <span class="inrow bp">
+        <input class="num" type="text" inputmode="numeric" data-cpid="${c.id}" data-cpfield="sys" placeholder="Sys" aria-label="Systolic (${c.short})">
+        <b>/</b>
+        <input class="num" type="text" inputmode="numeric" data-cpid="${c.id}" data-cpfield="dia" placeholder="Dia" aria-label="Diastolic (${c.short})">
+        <em>mmHg</em>
+      </span>
+    </div>`).join("");
 }
 
 function onInput(e) {
   const el = e.target;
+  if (el.dataset.setting) {
+    let val = el.value;
+    if (el.dataset.setting === "waterDefault") { val = numeric(val); el.value = val; }
+    state.settings[el.dataset.setting] = val;
+    lastEditedEl = el;
+    scheduleSettingsSave();
+    return;
+  }
   const d = state.cur;
   if (!d) return;
   if (el.dataset.home) {
@@ -225,19 +282,19 @@ function onInput(e) {
   } else if (el.dataset.lab) {
     d.labs[el.dataset.lab] = el.value;
     renderBadges();
-  } else if (el.dataset.cp) {
-    const field = el.dataset.cp;
-    const cp = d.checkpoints[state.tab];
+  } else if (el.dataset.cpid) {
+    const id = el.dataset.cpid, field = el.dataset.cpfield;
+    const cp = d.checkpoints[id];
     el.value = numeric(el.value);
     cp[field] = el.value;
     if (field === "sugar") {
       cp.insSuggested = suggestInsulin(el.value, state.chart).units;
-      renderSugarState(cp);
+      renderSugarNote(id, cp);
     }
-    if (field === "sys" && el.value.length >= 3 && num(el.value) >= 60) $('[data-cp="dia"]').focus();
+    if (field === "sys" && el.value.length >= 3 && num(el.value) >= 60) $(`[data-cpid="${id}"][data-cpfield="dia"]`).focus();
   } else return;
   lastEditedEl = el;
-  scheduleSave();
+  scheduleDaySave();
 }
 
 // ---------- insulin chart ----------
@@ -260,7 +317,9 @@ async function saveInsulin() {
   state.chart = normalizeChart(rows);
   await db.setKV("insulinChart", state.chart);
   toast(state.chart.length ? `Insulin chart saved (${state.chart.length} ranges)` : "Insulin chart cleared");
-  if (state.tab !== "home") renderCp();
+  // The suggested-insulin note lives under each checkpoint's Sugar field on
+  // Home; refresh it there since a new chart can change every suggestion.
+  if (state.tab === "home") CHECKPOINTS.forEach((c) => renderSugarNote(c.id));
 }
 
 // ---------- PDF ----------
@@ -286,7 +345,7 @@ async function downloadPdf() {
   if (!from || !to) return;
   if (from > to) [from, to] = [to, from];
   if (!window.jspdf?.jsPDF) return toast("PDF tools are still loading — try again in a moment.");
-  await flush();
+  await flushDay();
   const recs = await db.daysBetween(from, to);
   const map = Object.fromEntries(recs.map((r) => [r.date, r]));
   const doc = makePdf(dateRange(from, to), map, { day1: state.settings.day1 });
@@ -307,7 +366,7 @@ async function withSyncUI(btnId, topId, busyLabel, run) {
   const label = btn.lastChild.textContent;
   btn.lastChild.textContent = busyLabel;
   try {
-    await flush();
+    await flushAll();
     await run();
   } catch (err) {
     toast(err.message || String(err), 4500);
@@ -376,33 +435,16 @@ function applyTheme(theme) {
   $$("#themeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.theme === theme));
 }
 
-function openSettings() {
+function renderSettingsView() {
   const s = state.settings;
   $("#setDay1").value = s.day1;
   $("#setName").value = s.name;
   $("#setWater").value = s.waterDefault;
   $$("#themeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.theme === (pref("theme", "system"))));
   $("#clearDayBtn").textContent = `Clear entries for ${fmtLong(state.date)}`;
-  $("#settingsDlg").showModal();
-}
-async function saveSettings() {
-  state.settings = {
-    ...state.settings,
-    day1: $("#setDay1").value,
-    name: $("#setName").value.trim(),
-    waterDefault: $("#setWater").value.replace(/[^\d]/g, ""),
-  };
-  const { day1, name, waterDefault } = state.settings;
-  await db.setKV("settings", { day1, name, waterDefault });
-  toast("Settings saved");
-  renderHeader();
-  if (state.cur && !hasValue(state.cur.intake) && hasValue(waterDefault)) {
-    state.cur.intake = waterDefault;
-    if (state.tab === "home") renderHome();
-  }
 }
 async function exportBackup() {
-  await flush();
+  await flushAll();
   const data = { app: "healthplus", version: 1, exported: new Date().toISOString(), days: await db.allDays(), kv: { settings: state.settings, insulinChart: state.chart } };
   const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   const a = document.createElement("a");
@@ -418,7 +460,6 @@ async function restoreBackup(file) {
     if (!confirm(`Replace everything on this phone with ${data.days.length} days from the backup?`)) return;
     await db.replaceAll(data.days, data.kv);
     await loadSettings();
-    $("#settingsDlg").close();
     await setDate(state.date);
     toast("Backup restored");
   } catch (err) {
@@ -429,20 +470,20 @@ async function restoreBackup(file) {
 async function clearDay() {
   const label = fmtLong(state.date);
   if (!confirm(`Clear all entries for ${label}? This cannot be undone.`)) return;
-  clearTimeout(saveTimer);
-  saveTimer = null;
+  clearTimeout(daySaveTimer);
+  daySaveTimer = null;
   await db.deleteDay(state.date);
-  $("#settingsDlg").close("cancel");
+  state.tab = "home";
   await setDate(state.date);
   toast(`Entries for ${label} cleared`);
 }
 
 async function eraseAll() {
   if (!confirm("Erase ALL daily entries on this phone? Settings and the insulin chart are kept. This cannot be undone.")) return;
-  clearTimeout(saveTimer);
-  saveTimer = null;
+  clearTimeout(daySaveTimer);
+  daySaveTimer = null;
   await db.clearDays();
-  $("#settingsDlg").close("cancel");
+  state.tab = "home";
   await setDate(todayISO());
   toast("All entries erased from this phone");
 }
@@ -492,9 +533,6 @@ function bind() {
   $("#downloadBtn").onclick = doDownload;
   $("#downloadTop").onclick = doDownload;
 
-  $("#settingsBtn").onclick = openSettings;
-  $("#settingsTop").onclick = openSettings;
-  $("#settingsDlg").addEventListener("close", (e) => e.target.returnValue === "save" && saveSettings());
   $("#themeSeg").onclick = (e) => {
     const b = e.target.closest("button[data-theme]");
     if (!b) return;
@@ -512,8 +550,8 @@ function bind() {
   $$("dialog").forEach((d) => d.addEventListener("cancel", () => (d.returnValue = "cancel")));
   $$("dialog").forEach((d) => d.addEventListener("click", (e) => e.target === d && d.close("cancel")));
 
-  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && flush());
-  window.addEventListener("pagehide", () => flush());
+  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && flushAll());
+  window.addEventListener("pagehide", () => flushAll());
 }
 
 async function init() {
@@ -533,7 +571,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (!hadController || reloaded) return;
     reloaded = true;
-    flush().finally(() => location.reload());
+    flushAll().finally(() => location.reload());
   });
   navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
 }

@@ -36,9 +36,6 @@
     <button class="icon-btn" id="downloadTop" aria-label="Download from Google Sheet">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
     </button>
-    <button class="icon-btn" id="settingsTop" aria-label="Settings">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-    </button>
   </div>
   <div class="datebar">
     <button class="icon-btn" id="prevDay" aria-label="Previous day">
@@ -56,7 +53,7 @@
 </header>
 
 <main id="main">
-  <!-- HOME -->
+  <!-- HOME: everything entered daily -->
   <section class="view" id="view-home" data-view="home">
     <div class="card glass trend">
       <div class="trend-head">
@@ -70,6 +67,11 @@
       <div class="strip" id="strip"></div>
     </div>
 
+    <label class="card glass field" id="weightCard">
+      <span class="lbl">Weight</span>
+      <span class="inrow"><input class="num" type="text" inputmode="decimal" data-cpid="bbf" data-cpfield="weight" placeholder="—"><em>kg</em></span>
+    </label>
+
     <div class="grid2">
       <label class="card glass field">
         <span class="lbl">Water intake</span>
@@ -80,6 +82,23 @@
         <span class="inrow"><input class="num" type="text" inputmode="numeric" data-home="output" placeholder="—"><em>ml</em></span>
       </label>
     </div>
+
+    <div class="card glass cpsec">
+      <h3 class="section-title">Sugar</h3>
+      <div class="cplist" id="sugarList"></div>
+    </div>
+
+    <div class="card glass cpsec">
+      <h3 class="section-title">Blood pressure</h3>
+      <div class="cplist" id="bpList"></div>
+    </div>
+  </section>
+
+  <!-- OCCASIONAL: not entered every day -->
+  <section class="view" id="view-occasional" data-view="occasional" hidden>
+    <button class="btn glass" id="insulinBtn">
+      <svg viewBox="0 0 24 24"><path d="M18 2l4 4M17 7l3-3M19 9L9 19l-4 1 1-4L16 6zM14 8l2 2M11 11l2 2"/></svg>Insulin chart
+    </button>
 
     <details class="card glass fold" id="medsFold">
       <summary><span>Medicines</span><span class="badge" id="medsBadge"></span><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary>
@@ -92,13 +111,25 @@
       <p class="hint">Leave blank if not tested today.</p>
       <div class="list" id="labsList"></div>
     </details>
+  </section>
 
-    <div class="card glass snapshot" id="snapshot"></div>
+  <!-- SETTINGS -->
+  <section class="view" id="view-settings" data-view="settings" hidden>
+    <div class="card glass stack">
+      <div class="field plain">
+        <span class="lbl">Theme</span>
+        <div class="seg seg-block" role="tablist" id="themeSeg">
+          <button type="button" data-theme="system">System</button>
+          <button type="button" data-theme="light">Light</button>
+          <button type="button" data-theme="dark">Dark</button>
+        </div>
+      </div>
+      <label class="field plain"><span class="lbl">Day 1 date (for the “Day” row)</span><input type="date" data-setting="day1" id="setDay1"></label>
+      <label class="field plain"><span class="lbl">Name on PDF file (stays on this phone)</span><input type="text" data-setting="name" id="setName" autocomplete="off"></label>
+      <label class="field plain"><span class="lbl">Default water intake (ml) — filled in on each new day</span><input type="text" inputmode="numeric" data-setting="waterDefault" id="setWater" autocomplete="off" placeholder="e.g. 5000"></label>
+    </div>
 
     <div class="actions">
-      <button class="btn glass" id="insulinBtn">
-        <svg viewBox="0 0 24 24"><path d="M18 2l4 4M17 7l3-3M19 9L9 19l-4 1 1-4L16 6zM14 8l2 2M11 11l2 2"/></svg>Insulin chart
-      </button>
       <button class="btn glass" id="uploadBtn">
         <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Upload to Sheet
       </button>
@@ -108,51 +139,27 @@
       <button class="btn glass" id="pdfBtn">
         <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>Download PDF
       </button>
-      <button class="btn glass" id="settingsBtn">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings
+      <button class="btn glass" id="backupBtn">
+        <svg viewBox="0 0 24 24"><path d="M5 4a1 1 0 0 1 1-1h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1zM8 3v5h7V3M8 21v-6h8v6"/></svg>Export backup
       </button>
-    </div>
-  </section>
-
-  <!-- CHECKPOINT (shared template for the four tabs) -->
-  <section class="view" id="view-cp" data-view="cp" hidden>
-    <h2 class="cp-title"><span id="cpTitle"></span><small id="cpSub"></small></h2>
-
-    <div class="card glass field big">
-      <span class="lbl">Sugar</span>
-      <span class="inrow"><input class="num xl" type="text" inputmode="numeric" data-cp="sugar" placeholder="—"><em>mg/dL</em></span>
-      <span class="flag" id="sugarFlag"></span>
-      <small class="sub" id="insNote"></small>
+      <button class="btn glass" id="restoreBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M4 5h16"/></svg>Restore backup
+      </button>
+      <input type="file" id="restoreFile" accept="application/json,.json" hidden>
     </div>
 
-    <label class="card glass field big">
-      <span class="lbl">Insulin given</span>
-      <span class="inrow"><input class="num xl" type="text" inputmode="decimal" data-cp="insGiven" placeholder="—"><em>units</em></span>
-    </label>
-
-    <div class="card glass field big">
-      <span class="lbl">Blood pressure</span>
-      <span class="inrow bp">
-        <input class="num xl" type="text" inputmode="numeric" data-cp="sys" placeholder="Sys" aria-label="Systolic">
-        <b>/</b>
-        <input class="num xl" type="text" inputmode="numeric" data-cp="dia" placeholder="Dia" aria-label="Diastolic">
-        <em>mmHg</em>
-      </span>
+    <div class="card glass stack">
+      <button type="button" class="btn ghost" id="signOutBtn">Sign out of Google</button>
+      <button type="button" class="btn danger" id="clearDayBtn"></button>
+      <button type="button" class="btn danger" id="eraseBtn">Erase all entries on this phone</button>
     </div>
-
-    <label class="card glass field big" id="weightCard">
-      <span class="lbl">Weight</span>
-      <span class="inrow"><input class="num xl" type="text" inputmode="decimal" data-cp="weight" placeholder="—"><em>kg</em></span>
-    </label>
   </section>
 </main>
 
 <nav class="tabbar glass" id="tabbar">
   <button data-tab="home" class="on"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8.5a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19.5z"/></svg><span>Home</span></button>
-  <button data-tab="bbf"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="4"/><path d="M12 3v2M4.9 6.9l1.4 1.4M3 15h2M19 15h2M17.7 8.3l1.4-1.4M3 20h18"/></svg><span>8am</span></button>
-  <button data-tab="abf"><svg viewBox="0 0 24 24"><path d="M4 10h16a8 8 0 0 1-16 0zM8 3v3M12 2v4M16 3v3"/></svg><span>11am</span></button>
-  <button data-tab="bl"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><span>2pm</span></button>
-  <button data-tab="bd"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><span>8pm</span></button>
+  <button data-tab="occasional"><svg viewBox="0 0 24 24"><path d="M9 3h6a1 1 0 0 1 1 1v1h1.5A1.5 1.5 0 0 1 19 6.5v14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20.5v-14A1.5 1.5 0 0 1 6.5 5H8V4a1 1 0 0 1 1-1zM9 5v1.5h6V5H9zM8.5 12h7M8.5 16h4.5"/></svg><span>Occasional</span></button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></button>
 </nav>
 
 <!-- Insulin chart -->
@@ -181,33 +188,6 @@
       <button type="button" data-range="all">All</button>
     </div>
     <footer><button class="btn primary" value="ok" id="pdfGo">Download</button></footer>
-  </form>
-</dialog>
-
-<!-- Settings -->
-<dialog id="settingsDlg" class="sheet">
-  <form method="dialog" class="sheet-inner">
-    <header><h3>Settings</h3><button class="x" value="cancel" aria-label="Close">×</button></header>
-    <div class="field plain">
-      <span class="lbl">Theme</span>
-      <div class="seg seg-block" role="tablist" id="themeSeg">
-        <button type="button" data-theme="system">System</button>
-        <button type="button" data-theme="light">Light</button>
-        <button type="button" data-theme="dark">Dark</button>
-      </div>
-    </div>
-    <label class="field plain"><span class="lbl">Day 1 date (for the “Day” row)</span><input type="date" id="setDay1"></label>
-    <label class="field plain"><span class="lbl">Name on PDF file (stays on this phone)</span><input type="text" id="setName" autocomplete="off"></label>
-    <label class="field plain"><span class="lbl">Default water intake (ml) — filled in on each new day</span><input type="text" inputmode="numeric" id="setWater" autocomplete="off" placeholder="e.g. 5000"></label>
-    <div class="row-btns">
-      <button type="button" class="btn ghost" id="backupBtn">Export backup</button>
-      <button type="button" class="btn ghost" id="restoreBtn">Restore backup</button>
-      <input type="file" id="restoreFile" accept="application/json,.json" hidden>
-    </div>
-    <button type="button" class="btn ghost" id="signOutBtn">Sign out of Google</button>
-    <button type="button" class="btn danger" id="clearDayBtn"></button>
-    <button type="button" class="btn danger" id="eraseBtn">Erase all entries on this phone</button>
-    <footer><button class="btn primary" value="save" id="setSave">Save</button></footer>
   </form>
 </dialog>
 

@@ -165,6 +165,7 @@ h2 { font-size: 15px; margin: 0; letter-spacing: .01em; }
 
 /* Cards / fields */
 .card { border-radius: var(--radius); padding: 12px 14px; }
+.card.stack { display: flex; flex-direction: column; gap: 12px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .lbl { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .01em; }
@@ -182,9 +183,19 @@ input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-so
 input::placeholder { color: var(--muted); opacity: .55; font-weight: 500; }
 .field.big { padding-bottom: 14px; }
 .sub { color: var(--muted); font-size: 12.5px; min-height: 1em; }
+.sub.low { color: var(--danger); font-weight: 700; }
 .flag { font-size: 13.5px; font-weight: 700; min-height: 0; }
 .flag.low { color: var(--danger); background: var(--danger-soft); padding: 4px 10px; border-radius: 10px; align-self: flex-start; }
 input.lowval { color: var(--danger); border-color: var(--danger); }
+
+/* Checkpoint sections on Home (Sugar / Blood pressure): one row per time of day */
+.cpsec { display: flex; flex-direction: column; gap: 2px; }
+.section-title { margin: 0; font-size: 15px; font-weight: 800; }
+.cplist { display: grid; gap: 14px; margin-top: 8px; }
+.cprow { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.cprow:first-child { padding-top: 0; border-top: 0; }
+.cp-time { font-size: 12.5px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .03em; }
+.cprow .grid2 { gap: 10px; }
 
 /* Folds */
 .fold { padding: 0; }
@@ -220,7 +231,7 @@ input.lowval { color: var(--danger); border-color: var(--danger); }
 /* Tab bar */
 .tabbar {
   position: fixed; left: 10px; right: 10px; bottom: calc(env(safe-area-inset-bottom) + 8px); z-index: 10;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(3, 1fr);
   border-radius: 22px; padding: 6px; max-width: 620px; margin: 0 auto;
   background: var(--glass-strong);
 }
@@ -252,7 +263,6 @@ dialog.sheet::backdrop { background: rgba(8, 12, 24, 0.35); -webkit-backdrop-fil
 .ins-row button { border: 0; background: var(--danger-soft); color: var(--danger); border-radius: 10px; height: 36px; font-size: 18px; }
 .chips { display: flex; gap: 8px; }
 .chips button { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: 14px; }
-.row-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px);
