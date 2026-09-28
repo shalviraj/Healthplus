@@ -167,6 +167,8 @@ h2 { font-size: 15px; margin: 0; letter-spacing: .01em; }
 .card { border-radius: var(--radius); padding: 12px 14px; }
 .card.stack { display: flex; flex-direction: column; gap: 12px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.grid3 > .card { padding: 10px 8px; }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .lbl { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .01em; }
 .inrow { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -187,6 +189,12 @@ input::placeholder { color: var(--muted); opacity: .55; font-weight: 500; }
 .flag { font-size: 13.5px; font-weight: 700; min-height: 0; }
 .flag.low { color: var(--danger); background: var(--danger-soft); padding: 4px 10px; border-radius: 10px; align-self: flex-start; }
 input.lowval { color: var(--danger); border-color: var(--danger); }
+
+/* Daily has a lot of fields on screen at once (a 3-up row, four checkpoints
+   per Sugar/BP row), so its text fields run smaller than the app default. */
+#view-home input.num { font-size: 16px; padding: 6px 8px; border-radius: 10px; }
+#view-home .lbl { font-size: 11.5px; }
+#view-home .inrow em { font-size: 11px; }
 
 /* Checkpoint sections on Home (Sugar / Blood pressure): one row per time of day */
 .cpsec { display: flex; flex-direction: column; gap: 2px; }

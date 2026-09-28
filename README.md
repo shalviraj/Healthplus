@@ -2,7 +2,7 @@
 
 A phone-first daily health tracker. You add it to your home screen, it works offline, and it shares data with a Google Sheet via two one-way buttons — **Upload to Sheet** and **Download from Sheet**.
 
-- **Home:** everything entered daily. Date navigation, a 7-day strip (Weight / BP / Sugar), Weight, water intake, urine output, and Sugar / Blood pressure — each showing all four times of day (8am / 11am / 2pm / 8pm) at once, with suggested insulin under each Sugar reading. Every change saves automatically.
+- **Daily:** everything entered daily. Date navigation, a 7-day strip (Weight / BP / Sugar), Weight / Water intake / Urine output in one row, and Sugar / Blood pressure — each showing all four checkpoints (Fasting, PP, Before Lunch, Before Dinner) at once, with suggested insulin under each Sugar reading. Every change saves automatically.
 - **Occasional:** things that aren't entered every day — the insulin chart, Medicines (carried over from the previous day) and Labs.
 - **Settings:** theme, Day 1 date, PDF name, default water intake, Upload/Download to the Sheet, PDF export, backup/restore, sign out, and clearing/erasing entries.
 - **PDF:** choose a date range. The layout is Letter landscape with 8 days per page, a bold shaded Date row and the first column repeated on every page.
