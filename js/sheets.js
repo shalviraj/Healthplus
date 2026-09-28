@@ -2,7 +2,7 @@
 // Sheets REST API. The whole chart is rewritten from a merge of what is
 // already in the Sheet and what is on the phone, keyed by date, so syncing
 // again never duplicates a day and days missing from the phone are kept.
-import { ROWS, buildTable, parseDDMMYYYY, dateRange, dayFromSheetRow } from "./model.js";
+import { buildTable, parseDDMMYYYY, dateRange, dayFromSheetRow } from "./model.js";
 
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 const TOKEN_KEY = "hp.gtoken";
@@ -121,12 +121,17 @@ export async function syncToSheet({ clientId, sheetId, days, ctx }) {
   if (!allDates.length) throw new Error("Nothing to sync yet.");
   const dates = dateRange(allDates[0], allDates[allDates.length - 1]);
 
-  const table = buildTable(dates, local, ctx);
-  // Fill columns for dates only the Sheet knows about.
-  dates.forEach((iso, j) => {
-    if (local[iso] || !sheetDays[iso]) return;
-    ROWS.forEach((r, i) => (table[i + 1][j + 1] = sheetDays[iso][r.label] ?? ""));
+  // Field-level merge for every date: a real value already on the phone
+  // always wins; a field the phone has nothing for is filled in from the
+  // Sheet. This is what lets a date that already has SOME local data (e.g.
+  // only Intake was ever entered) still pick up the rest from the Sheet,
+  // instead of the old all-or-nothing "phone has this date, ignore the
+  // Sheet entirely" behaviour.
+  const merged = {};
+  dates.forEach((iso) => {
+    merged[iso] = sheetDays[iso] ? dayFromSheetRow(iso, sheetDays[iso], local[iso]) : local[iso];
   });
+  const table = buildTable(dates, merged, ctx);
 
   // Pad with blanks so any old, wider/taller content is overwritten.
   const width = Math.max(table[0].length, cols.length);
@@ -148,12 +153,11 @@ export async function syncToSheet({ clientId, sheetId, days, ctx }) {
 
   await api(token, `${sheetId}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: formatRequests(gid, table.length, table[0].length) }) });
 
-  // Pull down dates the Sheet has that this phone doesn't, so history entered
-  // elsewhere (or seeded directly into the Sheet) shows up when you browse to
-  // that date. Never touches a date the phone already has.
-  const imported = Object.keys(sheetDays)
-    .filter((iso) => !local[iso])
-    .map((iso) => dayFromSheetRow(iso, sheetDays[iso]));
+  // Pull the merged result back down for every date the Sheet had something
+  // for — a brand-new date the phone had nothing for, or a field filled in
+  // on a date that already existed locally. Saving it is always safe: the
+  // merge above never overwrote a real local value, only blanks.
+  const imported = Object.keys(sheetDays).map((iso) => merged[iso]);
 
   return { days: dates.length, imported };
 }

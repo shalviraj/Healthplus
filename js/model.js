@@ -151,19 +151,40 @@ export function buildTable(dates, dayMap, ctx) {
 // a date the phone has no entry for yet (see sheets.js's pull-down on sync).
 // Per-checkpoint BP isn't in the Sheet (only the day's Highest/Lowest), so it
 // stays blank; bpHighest/bpLowest fall back to bpHistoric for such a day.
-export function dayFromSheetRow(date, byLabel) {
-  const day = blankDay(date);
-  const get = (label) => byLabel[label] ?? "";
-  day.intake = get("Intake");
-  day.output = get("Output");
-  day.checkpoints.bbf.weight = get("Weight");
-  day.checkpoints.bbf.sugar = get("Fasting BS");
-  day.checkpoints.abf.sugar = get("PP");
-  day.checkpoints.bl.sugar = get("Before Lunch");
-  day.checkpoints.bd.sugar = get("Before Dinner");
-  MEDS.forEach((m) => (day.meds[m] = get(m)));
-  LABS.forEach((l) => (day.labs[l] = get(l)));
+const CP_BP_LABEL = { bbf: "BP Before BF", abf: "BP After BF", bl: "BP Before Lunch", bd: "BP Before Dinner" };
+const CP_SUGAR_LABEL = { bbf: "Fasting BS", abf: "PP", bl: "Before Lunch", bd: "Before Dinner" };
+
+// Field-level merge, not a whole-day replace: every value already present in
+// `base` (typically what's on the phone) is kept as-is; only fields `base`
+// has nothing for are filled in from the Sheet's column. This is what makes
+// a date with SOME local data (e.g. only Intake was ever entered) still pick
+// up the rest (weight, BP, labs) that only exists in the Sheet, and it's
+// safe to call for every date on every sync — it never overwrites a real
+// local edit.
+export function dayFromSheetRow(date, byLabel, base) {
+  const day = base
+    ? { ...blankDay(date), ...base, checkpoints: { ...blankDay(date).checkpoints, ...base.checkpoints }, meds: { ...base.meds }, labs: { ...base.labs } }
+    : blankDay(date);
+  // "N/A" is a placeholder some Sheet rows use for a blank cell (a Google
+  // Sheets CSV-import quirk needed a non-empty cell there); treat it as blank.
+  const get = (label) => { const v = byLabel[label] ?? ""; return v === "N/A" ? "" : v; };
+  const fill = (obj, key, val) => { if (!hasValue(obj[key]) && hasValue(val)) obj[key] = val; };
+
+  fill(day, "intake", get("Intake"));
+  fill(day, "output", get("Output"));
+  fill(day.checkpoints.bbf, "weight", get("Weight"));
+  CHECKPOINTS.forEach((c) => {
+    fill(day.checkpoints[c.id], "sugar", get(CP_SUGAR_LABEL[c.id]));
+    const bp = get(CP_BP_LABEL[c.id]);
+    if (hasValue(bp) && !hasValue(day.checkpoints[c.id].sys)) {
+      const [sys, dia] = String(bp).split("/");
+      day.checkpoints[c.id].sys = sys || "";
+      day.checkpoints[c.id].dia = dia || "";
+    }
+  });
+  MEDS.forEach((m) => fill(day.meds, m, get(m)));
+  LABS.forEach((l) => fill(day.labs, l, get(l)));
   const highest = get("BP-Highest"), lowest = get("BP-Lowest");
-  if (highest || lowest) day.bpHistoric = { highest, lowest };
+  if ((highest || lowest) && !day.bpHistoric) day.bpHistoric = { highest, lowest };
   return day;
 }

@@ -83,3 +83,43 @@ test("a Sheet-only date imports into a day record, with BP falling back to the s
   assert.equal(bpHighest(d), "140/90");
   assert.equal(bpLowest(d), "118/76");
 });
+
+test("a date with SOME local data still picks up the rest from the Sheet, without losing what's local", () => {
+  const local = blankDay("2026-09-25");
+  local.intake = "4700"; // the only thing ever entered on the phone that day
+  const byLabel = {
+    Intake: "9999", Output: "4850", Weight: "66.3", // Intake here must be IGNORED (local wins)
+    "Fasting BS": "137", "BP Before BF": "106/68",
+    Steroid: "20",
+  };
+  const d = dayFromSheetRow("2026-09-25", byLabel, local);
+  assert.equal(d.intake, "4700", "local value must not be clobbered by the sheet");
+  assert.equal(d.output, "4850", "blank local field is filled from the sheet");
+  assert.equal(d.checkpoints.bbf.weight, "66.3");
+  assert.equal(d.checkpoints.bbf.sugar, "137");
+  assert.equal(d.checkpoints.bbf.sys, "106");
+  assert.equal(d.checkpoints.bbf.dia, "68");
+  assert.equal(d.meds.Steroid, "20");
+
+  // A real local checkpoint reading must never be overwritten by the sheet.
+  const local2 = blankDay("2026-09-25");
+  local2.checkpoints.bbf.sys = "120";
+  local2.checkpoints.bbf.dia = "80";
+  const d2 = dayFromSheetRow("2026-09-25", { "BP Before BF": "106/68" }, local2);
+  assert.equal(d2.checkpoints.bbf.sys, "120");
+  assert.equal(d2.checkpoints.bbf.dia, "80");
+});
+
+test("an 'N/A' cell from the Sheet is treated as blank, not as a real value", () => {
+  const byLabel = {
+    Intake: "N/A", Output: "5150", "Fasting BS": "N/A",
+    "BP Before BF": "N/A", Steroid: "N/A", "BP-Highest": "N/A", "BP-Lowest": "N/A",
+  };
+  const d = dayFromSheetRow("2026-09-23", byLabel);
+  assert.equal(d.intake, "");
+  assert.equal(d.output, "5150");
+  assert.equal(d.checkpoints.bbf.sugar, undefined);
+  assert.equal(d.checkpoints.bbf.sys, undefined);
+  assert.equal(d.meds.Steroid, undefined);
+  assert.equal(d.bpHistoric, null);
+});
