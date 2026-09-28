@@ -43,7 +43,7 @@ test("day number counts from Day 1", () => {
   assert.equal(dayNumber("2026-08-10", "2026-08-11"), "");
 });
 
-test("export table has all four BP rows plus highest/lowest", () => {
+test("export table has all four BP rows, no highest/lowest", () => {
   const d = day([["130", "80"], ["140", "100"], ["124", "80"], ["117", "80"]]);
   d.checkpoints.bbf.sugar = "181";
   d.meds.Tac = "3mg BD";
@@ -55,8 +55,8 @@ test("export table has all four BP rows plus highest/lowest", () => {
   assert.deepEqual(row("BP After BF").slice(1), ["140/100", ""]);
   assert.deepEqual(row("BP Before Lunch").slice(1), ["124/80", ""]);
   assert.deepEqual(row("BP Before Dinner").slice(1), ["117/80", ""]);
-  assert.equal(row("BP-Highest")[1], "140/100");
-  assert.equal(row("BP-Lowest")[1], "117/80");
+  assert.equal(row("BP-Highest"), undefined);
+  assert.equal(row("BP-Lowest"), undefined);
   assert.equal(row("Fasting BS")[1], "181");
   assert.equal(row("Tac")[1], "3mg BD");
   assert.equal(t.length, ROWS.length + 1);
